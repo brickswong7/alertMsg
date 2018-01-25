@@ -1,0 +1,93 @@
+/**
+ * Created by a on 1/25/18.
+ */
+define('alertMsg',['jquery'],function () {
+    var alertMsg = {
+        _boxId: ".alert",
+        _bgId: ".alert-bg",
+        _closeTimer: null,
+        _types: {error: "error", info: "info", warn: "warn", correct: "correct", confirm: "confirm"},
+        _bgHtml: '<div class="alert-bg"></div>',
+        _html: '<div class="alert"><h1 class="cl">#title#<div class="x" id="xclose">x</div></h1><div class="msg">#message#</div>#button#</div>',
+
+        _open: function (type) {
+            $(this._boxId).remove();
+            $(this._bgId).remove();
+
+            if (type.type == 'confirm') {
+                this._btnHtml = '<div class="toolBar"><button type="button">确　认</button><button type="button">取　消</button></div>'
+            }else{
+                this._btnHtml = '<div class="toolBar"><button type="button">确　认</button></div>';
+            }
+
+            var boxHtml = this._html.replace("#title#", type.title).replace("#message#", type.msg).replace("#button#", type.foot ? '' : this._btnHtml);
+
+            $(this._bgHtml + boxHtml).appendTo("body");
+
+
+
+            if ($.isFunction(type.callback) == false) {
+
+                $('#xclose,.toolBar button').on('click', function () {
+                    alertMsg.close();
+                });
+
+            } else {
+
+                $('#xclose').on('click', function () {
+                    alertMsg.close();
+                });
+                $('.toolBar button').eq(0).on('click', function () {
+                    type.callback();
+                });
+                if (type.type = 'confirm') {
+                    $('.toolBar button').eq(1).on('click', function () {
+                        alertMsg.close();
+                    });
+                }
+
+            }
+        },
+        close: function () {
+            $(document).unbind("keydown", 13).unbind("keydown", 27);
+            $(this._boxId).remove();
+            $(this._bgId).remove();
+        }
+    };
+
+    return {
+        dialog:function(type) {
+            type.foot = true;
+            alertMsg._open(type);
+        },
+        error: function(msg, options) {
+            var op = {msg:msg,title:'出错了！'};
+            op = $.extend(op, options);
+            alertMsg._open(op);
+        },
+        info: function(msg, options) {
+            var op = {msg:msg,title:'提示信息'};
+            op = $.extend(op, options);
+            alertMsg._open(op);
+        },
+        infoFade: function(msg, options) {
+            var op = {msg:msg,title:'提示信息'};
+            op = $.extend(op, options);
+            alertMsg._open(op);
+        },
+        warn: function(msg, options) {
+            var op = {msg:msg,title:'警告信息'};
+            op = $.extend(op, options);
+            alertMsg._open(op);
+        },
+        confirm: function(msg, options) {
+            var op = {okName:'确认', okCall:null, cancelName:'取消', cancelCall:null};
+            $.extend(op, options);
+            var buttons = [
+                {name:op.okName, call: op.okCall, keyCode:13},
+                {name:op.cancelName, call: op.cancelCall, keyCode:27}
+            ];
+            alertMsg._open({msg:msg,title:'提示信息',type:'confirm',callback:options.okCall});
+        }
+    };
+})
